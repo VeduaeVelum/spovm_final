@@ -1,88 +1,72 @@
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-
-#ifdef __linux__
-#define MASSIVESFILEPATH "/home/erick_vb/spo/lab1/massives.txt"
-#endif
-
-#ifdef _WIN32
-#define MASSIVESFILEPATH "C:\spovmProjects\lab1\massives.txt"
-#endif
-
-#ifdef _WIN64
-#define MASSIVESFILEPATH "C:\spovmProjects\lab1\massives.txt"
-#endif
-
-using namespace std;
-
-const int  MASSIVELENGTH = 10;
+#include "childFile.h"
 
 int main(int argc, char* argv[])
 {
-	int massive[MASSIVELENGTH];
-	fstream file;
-	file.open(MASSIVESFILEPATH, ios::in);
-	for (int j = 0; j < MASSIVELENGTH; j++)
+	int *massive = NULL;
+	massive = new int[MASSIVELENGTH];
+	std::fstream file;
+	massive = get_massive(massive, file);
+
+	CHILD_TERM_ACTION
+
+	if (massive == NULL)
 	{
-		file >> massive[j];
+		std::cout << "File couldn't be opened for reading, \
+					 program will terminate" << std::endl;
+		return 1;
 	}
-	file.close();
-	sort(massive, massive + MASSIVELENGTH);
-	file.open(MASSIVESFILEPATH, ios::out | ios::trunc);
-	for (int j = 0; j < MASSIVELENGTH; j++)
+	std::sort(massive, massive + MASSIVELENGTH);
+	show_massive(massive);
+	if (save_sort_massive(massive, file) == false)
 	{
-		file << massive[j] << ' ';
+		std::cout << "File couldn't be opened for writing, \
+					 program will terminate" << std::endl;
+		return 1;
 	}
-	file.close();
+	while (outFlag == false)
+	{
+		SLEEP(1);
+	}
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-
-using namespace std;
-
-const int  MASSIVELENGTH = 10;
-
-int main(int argc, char* argv[])
+int* get_massive(int* massive, std::fstream& file)
 {
-	int temp;
-	int massive[MASSIVELENGTH];
-	fstream file;	
-	file.open("/home/erick_vb/spo/lab1/massives.txt", ios::in);
-    for (int j = 0; j < MASSIVELENGTH; j++)
+	file.open(MASSIVESFILEPATH, std::ios::in);
+	if (file.is_open() == false)
+	{
+		delete massive;
+		return NULL;
+	}
+	for (int j = 0; j < MASSIVELENGTH; j++)
 	{
 		file >> massive[j];
 	}
 	file.close();
-    sort(massive, massive + MASSIVELENGTH);
-    file.open("/home/erick_vb/spo/lab1/massives.txt", ios::out | ios::trunc);
-    for (int j = 0; j < MASSIVELENGTH; j++)
+	return massive;
+}
+bool save_sort_massive(int* massive, std::fstream& file)
+{
+	file.open(MASSIVESFILEPATH, std::ios::out | std::ios::trunc);
+	if (file.is_open() == false)
+	{
+		delete massive;
+		return false;
+	}
+	for (int j = 0; j < MASSIVELENGTH; j++)
 	{
 		file << massive[j] << ' ';
 	}
 	file.close();
-	return 0;
-}*/
+	delete massive;
+	return true;
+}
+void show_massive(int* massive)
+{
+	for (int j = 0; j < MASSIVELENGTH; j++)
+	{
+		std::cout.width(NUMBERWIGHT);
+		std::cout << massive[j];
+	}
+	std::cout << std::endl;
+}
