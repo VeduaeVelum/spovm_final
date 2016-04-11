@@ -1,145 +1,45 @@
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
-#include <time.h>
-
-#ifdef __linux__
-#include <unistd.h>
-#include <wait.h>
-#define SYSTEMPAUSE getchar()
-#define MASSIVESFILEPATH "/home/erick_vb/spo/lab1/massives.txt"
-bool 	create_process(int status)
-{
-	pid_t pid = fork();
-	if (pid < 0)
-	{
-		std::cout << "Error creation process, program will stop" << std::endl;
-		return false;
-	}
-	else if (pid == 0)
-	{
-		execl("/home/erick_vb/spo/lab1/ch", "", NULL, NULL);
-	}
-	else if (waitpid(pid, &status, 0) != pid)
-	{
-		status = -1;
-	}
-	return true;
-}
-#endif
-
-#ifdef _WIN32
-#include <Windows.h>
-#define MASSIVESFILEPATH "C:\spovmProjects\lab1\massives.txt"
-#define SYSTEMPAUSE system("pause");
-bool	create_process(int status)
-{
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-	TCHAR ChildProcess[] = TEXT("child.exe");
-	if (CreateProcess(NULL, ChildProcess,
-		NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == FALSE)
-	{
-		std::cout << "Error creation process" << std::endl;
-		return false;
-	}
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return true;
-}
-#endif
-
-#ifdef _WIN64
-#include <Windows.h>
-#define MASSIVESFILEPATH "C:\spovmProjects\lab1\massives.txt"
-#define SYSTEMPAUSE system("pause");
-bool	create_process(int status)
-{
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-	TCHAR ChildProcess[] = TEXT("child.exe");
-	if (CreateProcess(NULL, ChildProcess,
-		NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) == FALSE)
-	{
-		std::cout << "Error creation process" << std::endl;
-		return false;
-	}
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return true;
-}
-#endif
-
-using namespace std;
-
-const int MASSIVELENGTH = 10;
-const int NUMBERWIGHT = 6;
-const int DOWNBOARD = 1;
-const int UPBOARD = 300;
-
-int** 	memAlloc_matrix(int**, int, int);
-int** 	rand_matrix(int**, int, int);
-void 	show_matrix(int**, int, int);
-void 	memFree_matrix(int**, int);
-bool 	input_file(int*, fstream&);
-int* 	output_file(int*, fstream&);
-bool 	create_process(int);
-bool 	check_loops(int);
+#include "mySigProcessor.h"
 
 int main(int argc, char* argv[])
 {
-	int loops = atoi(argv[1]), status = 0;
+	int loops = atoi(argv[1]);
 	int** massives = NULL;
-	fstream file;
+	std::fstream file;
+
+	pid_massive = new PID_T[loops];
 
 	srand(time(NULL));
 
-	if (check_loops(loops) == false) 
+	if (check_loops(loops) == false)
 	{
 		return 1;
 	}
+
 	massives = memAlloc_matrix(massives, loops, MASSIVELENGTH);
 	massives = rand_matrix(massives, loops, MASSIVELENGTH);
-	cout << "Original massives: " << endl;
-	show_matrix(massives, loops, MASSIVELENGTH);
-	for (int i = 0; i < loops; i++)
+	print_menu_and_massives(massives, loops);
+	massives = flag_divider(massives, file, loops);
+	if (massives == NULL)
 	{
-		if (input_file(massives[i], file) == false)
-		{
-			memFree_matrix(massives, loops);
-			return 1;
-		}
-
-		if (create_process(status) == false)
-		{
-			file.close();
-			memFree_matrix(massives, loops);
-			return 1;
-		}
-
-		massives[i] = output_file(massives[i], file);
-		if (massives[i] == NULL)
-		{
-			memFree_matrix(massives, loops);
-			return 1;
-		}
+		return 1;
 	}
-	cout << "Sorted massives: " << endl;
-	show_matrix(massives, loops, MASSIVELENGTH);
 	memFree_matrix(massives, loops);
-	SYSTEMPAUSE;
+	delete[] pid_massive;
+	SYSTEMPAUSE
 	return 0;
 }
 
+void 	print_menu_and_massives(int** massives, int loops)
+{
+	std::cout << "Menu functions: " << std::endl;
+	
+	std::cout << "'+' - sort the next massive" << std::endl;
+	std::cout << "'-' - delete the last sorting process" << std::endl;
+	std::cout << "'q' - close the program" << std::endl;
+	std::cout << "Original massives: " << std::endl;
+
+	show_matrix(massives, loops, MASSIVELENGTH);
+}
 int** 	memAlloc_matrix(int** matrix, int width, int height)
 {
 	int i, j;
@@ -151,9 +51,10 @@ int** 	memAlloc_matrix(int** matrix, int width, int height)
 			matrix[i] = new int[height];
 		}
 	}
-	catch (bad_alloc)
+	catch (std::bad_alloc)
 	{
-		cout << "Memory couldn't be allocated, program will stop" << endl;
+		std::cout << "Memory couldn't be allocated, \
+					 program will stop" << std::endl;
 		if (matrix != NULL)
 		{
 			for (j = 0; j < i; j++)
@@ -162,7 +63,7 @@ int** 	memAlloc_matrix(int** matrix, int width, int height)
 			}
 			delete matrix;
 		}
-		exit(-3);
+		exit(EXIT_FAILURE);
 	}
 	return matrix;
 }
@@ -172,7 +73,7 @@ int** 	rand_matrix(int** matrix, int width, int height)
 	{
 		for (int j = 0; j < height; j++)
 		{
-			matrix[i][j] = -500 + rand() % 1000;
+			matrix[i][j] = RAND_SUB + rand() % RAND_BOUND;
 		}
 	}
 	return matrix;
@@ -183,12 +84,12 @@ void 	show_matrix(int** matrix, int width, int height)
 	{
 		for (int j = 0; j < height; j++)
 		{
-			cout.width(NUMBERWIGHT);
-			cout << matrix[i][j];
+			std::cout.width(NUMBERWIGHT);
+			std::cout << matrix[i][j];
 		}
-		cout << endl;
+		std::cout << std::endl;
 	}
-	cout << endl;
+	std::cout << std::endl;
 }
 void 	memFree_matrix(int** matrix, int width)
 {
@@ -202,17 +103,19 @@ bool 	check_loops(int loops)
 {
 	if (loops < DOWNBOARD || loops > UPBOARD)
 	{
-		cout << "Incorrect arguments, repeat program(use argument from 1 to 10000)" << endl;
+		std::cout << "Incorrect arguments, repeat program \
+					 (use argument from 1 to 300)" << std::endl;
 		return false;
 	}
 	return true;
 }
-bool 	input_file(int* massive, fstream& file)
+bool 	input_file(int* massive, std::fstream& file)
 {
-	file.open(MASSIVESFILEPATH, ios::out | ios::trunc);
+	file.open(MASSIVESFILEPATH, std::ios::out | std::ios::trunc);
 	if (!file.is_open())
 	{
-		cout << "File can't be opened for writing. Maybe it doesn't exist" << endl;
+		std::cout << "File can't be opened for writing. \
+					 Maybe it doesn't exist" << std::endl;
 		return false;
 	}
 	for (int j = 0; j < MASSIVELENGTH; j++)
@@ -222,12 +125,13 @@ bool 	input_file(int* massive, fstream& file)
 	file.close();
 	return true;
 }
-int* 	output_file(int* massive, fstream& file)
+int* 	output_file(int* massive, std::fstream& file)
 {
-	file.open(MASSIVESFILEPATH, ios::in);
+	file.open(MASSIVESFILEPATH, std::ios::in);
 	if (!file.is_open())
 	{
-		cout << "File can't be opened for reading" << endl;
+		std::cout << "File can't be opened for reading" << std::endl;
+		delete massive;
 		return NULL;
 	}
 	for (int j = 0; j < MASSIVELENGTH; j++)
@@ -236,4 +140,136 @@ int* 	output_file(int* massive, fstream& file)
 	}
 	file.close();
 	return massive;
+}
+
+void 	user_menu(int current_pros_num, int loops)
+{
+	char ch;
+
+	ADD_PROS_ACTION
+	KILL_PROS_ACTION
+	TERM_ACTION
+	CLEARSTDIN
+	ch = getchar();
+	switch (ch)
+	{
+	case '+': {
+		if (current_pros_num < loops)
+		{
+			ADD_SIG_PULSE
+			addProsFlag = true;
+			menuFlag = false;
+		}
+		else
+		{
+			std::cout << "You got a limit of processes" << std::endl;
+		}
+		break;
+	}
+	case '-': {
+		if (current_pros_num > 0)
+		{
+			KILL_SIG_PULSE
+			killProsFlag = true;
+			menuFlag = false;
+		}
+		else
+		{
+			std::cout << "You have not any process yet" << std::endl;
+		}
+		break;
+	}
+	case 'q': {
+		OUT_SIG_PULSE
+		outFlag = true;
+		menuFlag = false;
+		break;
+	}
+	default: {
+		std::cout << "Undefined reference, try again" << std::endl;
+	}
+	}
+}
+
+int** 	flag_divider(int** massives, std::fstream& file, int loops)
+{
+	int i = 0;
+	bool trigger = false;
+
+	while (outFlag == false)
+	{
+		if (menuFlag == true)
+		{
+			user_menu(i, loops);
+		}
+		if (addProsFlag == true && i < loops)
+		{
+			massives[i] = call_massive_sort(massives[i], file, i);
+			if (massives[i] == NULL)
+			{
+				memFree_matrix(massives, loops);
+				return NULL;
+			}
+			std::cout << "Current process is working: ";
+			SHOW_PID(i);
+			i++;
+			addProsFlag = false;
+			trigger = true;
+			menuFlag = true;
+		}
+		else if (killProsFlag == true && i > 0)
+		{
+			if (trigger == true)
+			{
+				i--;
+				trigger = false;
+			}
+			KILL_CHILD_SIG_PULSE
+			std::cout << "Current process was killed: ";
+			SHOW_PID(i);
+			if (i != 0)
+			{
+				i--;
+			}
+			killProsFlag = false;
+			menuFlag = true;
+		}
+		SLEEP(1);
+	}
+	kill_working_processes(i);
+	return massives;
+}
+
+int* 	call_massive_sort(int* massive, std::fstream& file, int current_pros_num)
+{
+	int status = 0;
+
+	if (input_file(massive, file) == false)
+	{
+		delete massive;
+		return NULL;
+	}
+
+	else if (create_process(status, current_pros_num) == false)
+	{
+		file.close();
+		delete massive;
+		return NULL;
+	}
+
+	massive = output_file(massive, file);
+
+	if (massive == NULL)
+	{
+		return NULL;
+	}
+	return massive;
+}
+
+void 	kill_working_processes(int current_pros_num)
+{
+	for (int i = 0; i < current_pros_num; i++)
+	{
+		KILL_CHILD_SIG_PULSE
+	}
 }
