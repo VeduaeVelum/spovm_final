@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baa041b7_5b1e2264",
+        "filename": "Client.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1007670
+      },
+      "writtenOn": "2016-04-25T20:33:45Z",
+      "side": 1,
+      "message": "without this buffer didn\u0027t work, I have no idea why",
+      "range": {
+        "startLine": 120,
+        "startChar": 1,
+        "endLine": 120,
+        "endChar": 22
+      },
+      "revId": "989f49135a07e20c6c40dc498138c95c183316b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
