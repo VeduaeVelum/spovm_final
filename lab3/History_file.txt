@@ -1,0 +1,67 @@
+-------------Starting session-----------
+Time of starting: Mon Apr 25 23:01:53 2016
+
+dwa
+ls
+ls
+ls
+exit
+--------------Ending session-----------
+Time of ending: Mon Apr 25 23:02:05 2016
+
+-------------Starting session-----------
+Time of starting: Mon Apr 25 23:02:12 2016
+
+dwa
+ls
+ls
+ls
+exit
+--------------Ending session-----------
+Time of ending: Mon Apr 25 23:02:17 2016
+
+-------------Starting session-----------
+Time of starting: Mon Apr 25 23:05:24 2016
+
+dwa
+ls
+exit
+--------------Ending session-----------
+Time of ending: Mon Apr 25 23:05:29 2016
+
+-------------Starting session-----------
+Time of starting: Tue Apr 26 08:34:48 2016
+
+dwa
+ls
+ls
+ls
+exit
+--------------Ending session-----------
+Time of ending: Tue Apr 26 08:34:56 2016
+
+-------------Starting session-----------
+Time of starting: Tue Apr 26 08:47:35 2016
+
+dwad
+dwad
+wa
+aw
+ls
+exit
+--------------Ending session-----------
+Time of ending: Tue Apr 26 08:47:56 2016
+
+-------------Starting session-----------
+Time of starting: Tue Apr 26 09:06:59 2016
+
+dwad
+ls
+get file1.txt
+ls
+put file.txt
+put file1.txt
+ls
+exit
+--------------Ending session-----------
+Time of ending: Tue Apr 26 09:41:54 2016
